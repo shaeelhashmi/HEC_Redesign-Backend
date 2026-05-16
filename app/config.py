@@ -1,26 +1,16 @@
-from functools import lru_cache
-from typing import Annotated
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-from pydantic import field_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
-
-
-class Settings(BaseSettings):
-    clerk_secret_key: str
-    clerk_jwt_key: str | None = None
-    clerk_authorized_parties: Annotated[list[str], NoDecode] = []
-    clerk_webhook_signing_secret: str | None = None
-
-    @field_validator("clerk_authorized_parties", mode="before")
-    @classmethod
-    def _split_csv(cls, v: str | list[str]) -> list[str]:
-        if isinstance(v, str):
-            return [p.strip() for p in v.split(",") if p.strip()]
-        return v
-
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+class Config:
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+    CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
+    CLERK_JWT_KEY = os.getenv("CLERK_JWT_KEY")
+    
+    # Cloudinary Specific
+    CLOUDINARY_CONFIG = {
+        'cloud_name': os.getenv('CLOUD_NAME'),
+        'api_key': os.getenv('API_KEY'),
+        'api_secret': os.getenv('API_SECRET'),
+        'secure': True
+    }

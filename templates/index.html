@@ -782,10 +782,10 @@
 
     <!-- Track Application CTA -->
     <div class="track-cta">
-      <div class="track-cta-title">🔍 Track Your Application</div>
-      <div class="track-cta-desc">Enter your reference number to get real-time status updates without logging in.</div>
-      <input class="track-input" type="text" placeholder="e.g. HEC-ATT-2024-004821">
-      <button class="track-btn">Track Now</button>
+      <div class="track-cta-title">Verify CNIC</div>
+      <div class="track-cta-desc">Add a picture of your CNIC to verify your identity</div>
+      <input class="track-input" type="file" accept="image/*" placeholder="Upload CNIC image" id="cnic">
+      <button class="track-btn" id="verify_cnic" >Verify Now</button>
     </div>
 
     <!-- Help Centre -->
@@ -1074,5 +1074,6 @@
   });
 </script>
  <script  src="/static/Logout.js"></script>
+  <script  src="/static/VerifyCnic.js"></script>
 </body>
 </html>
