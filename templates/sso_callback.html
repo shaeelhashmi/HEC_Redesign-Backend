@@ -10,19 +10,36 @@
   ></script>
   <script>
 window.addEventListener('load', async () => {
-  await Clerk.load();
-  await Clerk.handleRedirectCallback({
-    afterSignInUrl: '/dashboard',   // ← redirect here after login
-    afterSignUpUrl: '/dashboard',
-  });
-     const token = await Clerk.session.getToken();
+    await Clerk.load();
+  
+    await Clerk.handleRedirectCallback();
 
-    await fetch('/api/login-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token })
-    });
+    if (Clerk.user) {
+        const email = Clerk.user.primaryEmailAddress.emailAddress;
+        
+        // sync with Flask backend
+        try {
+            const response = await fetch('/api/login-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+
+            if (response.ok) {
+                // IMPORTANT: Use replace() so the user can't click "Back" into the loop
+                window.location.replace('/dashboard');
+            } else {
+                console.error("Flask rejected the session setup.");
+                window.location.replace('/login');
+            }
+        } catch (err) {
+            console.error("Network error syncing with backend:", err);
+        }
+    } else {
+        window.location.replace('/login');
+    }
 });
+
   </script>
 </head>
 <body></body>

@@ -26,16 +26,18 @@
 
 <script>
 
-  window.addEventListener('load', async function () {
+ window.addEventListener('load', async function () {
     await Clerk.load({
       ui: { ClerkUI: window.__internal_ClerkUICtor },
     })
 
-    if (Clerk.isSignedIn) {
-      window.location.href = '/dashboard'; 
+    // If Clerk is signed in, redirect to sso-callback 
+    // to sync the Flask session before going to the dashboard
+    if (Clerk.user) {
+      window.location.href = '/sso-callback'; 
     } else {
       document.getElementById('app').innerHTML = `
-        <div id="sign-in"></div>
+        <div id="sign-in" style="display: flex; justify-content: center; align-items: center; height: 100vh;"></div>
       `
       const signInDiv = document.getElementById('sign-in')
       Clerk.mountSignIn(signInDiv)

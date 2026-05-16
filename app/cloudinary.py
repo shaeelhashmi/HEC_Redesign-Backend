@@ -1,6 +1,6 @@
 import cloudinary
 import cloudinary.uploader
-from config import Config
+from .config import Config
 
 # Apply the configuration from your config file
 cloudinary.config(**Config.CLOUDINARY_CONFIG)

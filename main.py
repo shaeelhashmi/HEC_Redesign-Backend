@@ -2,12 +2,27 @@ from flask import Flask, redirect, request, jsonify, session, render_template, u
 from app.cloudinary import upload_to_cloudinary
 import os
 from dotenv import load_dotenv
+from flask_mysqldb import MySQL
+import MySQLdb.cursors
+import re
 load_dotenv()
 from app.auth import require_auth
 app = Flask(__name__)
 
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "shaeel_dev_secret_123")
 
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
+# Add these lines to help cookies work on your local machine
+app.config.update(
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=False,  # Set to False because you are using http, not https
+    SESSION_COOKIE_HTTPONLY=True,
+    PERMANENT_SESSION_LIFETIME=3600 # 1 hour
+)
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD")
+app.config['MYSQL_DB'] = os.getenv("MYSQL_DB")
+mysql = MySQL(app)
 
 CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
 
@@ -17,36 +32,68 @@ def index():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login_page'))
 # Fixed: Explicitly added methods=['POST'] argument
-@app.route('/protected', methods=['GET'])
-@require_auth
-def protected():
-    return jsonify({"message": "This is a protected route", "user_id": request.user})
 
 from clerk_backend_api import Clerk, authenticate_request, AuthenticateRequestOptions
 
-@app.route('/api/login-session', methods=['GET'])
+@app.route('/api/login-session', methods=['POST'])
 def login_session():
-    state = authenticate_request(
-        request,
-        AuthenticateRequestOptions(
-            secret_key=os.getenv("CLERK_SECRET_KEY"),
-            jwt_key=os.getenv("CLERK_JWT_KEY"),  # the JWKS public key PEM
-            authorized_parties=["http://127.0.0.1:5000"],
-            accepts_token=["session_token"],
-        )
-    )
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({"error": "No email provided"}), 400
 
-    if not state.is_signed_in:
-        return jsonify({"error": state.reason or "unauthorized"}), 401
+    # Initialize session
+    session.permanent = True
+    session["user_email"] = email
 
-    clerk_user_id = state.payload["sub"]
-    session["user_id"] = clerk_user_id
+    # Initialize User in DB
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    try:
+        cursor.execute("SELECT email FROM cnic WHERE email = %s", (email,))
+        if not cursor.fetchone():
+            cursor.execute("INSERT INTO cnic (email) VALUES (%s)", (email,))
+            mysql.connection.commit()
+            print(f"Created new DB record for {email}")
+        else:
+            print(f"User {email} already in DB")
+    except Exception as e:
 
-    return jsonify({"ok": True, "user_id": clerk_user_id}), 200
+        print(f"Database error during login: {e}")
+        return jsonify({"error": "DB sync failed"}), 500
+    finally:
+        cursor.close()
+
+    return jsonify({"ok": True}), 200
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('index.html')
+    email = session.get('user_email')
+    if not email:
+        return redirect(url_for('login_page'))
+
+    status = "Unverified"
+    image_url = None
+    cnic_num = None
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT CNIC_image, cnic_number FROM cnic WHERE email = %s", (email,))
+    record = cursor.fetchone()
+    cursor.close()
+
+    if record:
+        image_url = record.get('CNIC_image')
+        cnic_num = record.get('cnic_number')
+
+        if image_url and not cnic_num:
+            status = "Under Review"
+        elif image_url and cnic_num:
+            status = "CNIC Verified"
+
+    # Pass everything to your index.html
+    return render_template('index.html', 
+                          )
+
 @app.route('/sso-callback')
 def sso_callback():
     return render_template('sso_callback.html')
@@ -78,13 +125,13 @@ def verify_cnic():
 
     image_file = request.files['cnic_image']
 
-
+    
     result = upload_to_cloudinary(image_file)
 
     if result:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # GET THE URL HERE - This is what you'll save to your SQL table later
         secure_url = result.get('secure_url')
-        
         return jsonify({
             "status": "success",
             "url": secure_url,
