@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEC Portal Redesign — HCI Project</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --hec-green:   #0A5C36;
+    --hec-light:   #12783F;
+    --hec-gold:    #C8972A;
+    --hec-gold-lt: #F5E8C7;
+    --bg:          #F7F6F2;
+    --white:       #FFFFFF;
+    --text-dark:   #111A14;
+    --text-mid:    #3D5244;
+    --text-light:  #7A9485;
+    --border:      #D8E5DC;
+    --card-shadow: 0 2px 16px rgba(10,92,54,0.08);
+    --radius-sm:   8px;
+    --radius-md:   14px;
+    --radius-lg:   22px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ──────────────────────────────────────────── */
+  .topbar {
+    background: var(--hec-green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: var(--hec-gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 900;
+    color: var(--hec-green);
+    letter-spacing: -1px;
+  }
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .logo-sub { font-size: 10px; font-family: 'DM Sans', sans-serif; font-weight: 400; opacity: .7; }
+
+  .topbar-nav {
+    display: flex; gap: 4px;
+  }
+  .topbar-nav a {
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    font-size: 13px; font-weight: 500;
+    padding: 6px 14px; border-radius: 6px;
+    transition: background .15s;
+  }
+  .topbar-nav a:hover, .topbar-nav a.active {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+  }
+
+  .topbar-actions {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .btn-lang {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff; font-size: 12px; font-weight: 500;
+    padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .btn-login {
+    background: var(--hec-gold);
+    color: var(--hec-green);
+    font-size: 13px; font-weight: 600;
+    padding: 6px 18px; border-radius: 7px;
+    border: none; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(200,151,42,0.30);
+  }
+
+  /* ── MIC BUTTON ──────────────────────────────────────── */
+  .btn-mic {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .btn-mic:hover {
+    background: rgba(255,255,255,0.22);
+  }
+  .btn-mic.mic-active {
+    background: var(--hec-gold);
+    border-color: var(--hec-gold);
+    box-shadow: 0 0 0 4px rgba(200,151,42,0.35);
+    animation: mic-pulse 1.2s ease-in-out infinite;
+  }
+  .btn-mic.mic-active svg { color: var(--hec-green); }
+  @keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(200,151,42,0.4); }
+    50%       { box-shadow: 0 0 0 7px rgba(200,151,42,0.15); }
+  }
+
+  /* Tooltip shown when hovering a nav link while mic is active */
+  .voice-tooltip {
+    position: fixed;
+    background: var(--hec-green);
+    color: #fff;
+    font-size: 13px; font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .18s, transform .18s;
+    z-index: 9999;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    white-space: nowrap;
+  }
+  .voice-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .voice-tooltip::before {
+    content: '🔊 ';
+  }
+
+  /* ── HERO ────────────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, var(--hec-green) 0%, #0e7040 60%, #1a8a50 100%);
+    padding: 56px 48px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+    position: relative;
+  }
+  .hero-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    color: var(--hec-gold); text-transform: uppercase; margin-bottom: 12px;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 38px; font-weight: 900; color: #fff; line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .hero-title span { color: var(--hec-gold); }
+  .hero-desc {
+    font-size: 15px; color: rgba(255,255,255,0.78); line-height: 1.65;
+    max-width: 420px; margin-bottom: 28px;
+  }
+  .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--hec-gold); color: var(--hec-green);
+    font-weight: 700; font-size: 14px;
+    padding: 12px 28px; border-radius: 9px; border: none; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(200,151,42,0.35);
+  }
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    color: #fff; font-weight: 500; font-size: 14px;
+    padding: 12px 24px; border-radius: 9px; cursor: pointer;
+  }
+
+  /* Quick stats in hero */
+  .hero-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    backdrop-filter: blur(8px);
+  }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 900; color: var(--hec-gold); margin-bottom: 2px;
+  }
+  .stat-label { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 400; }
+
+  /* ── QUICK SERVICES ──────────────────────────────────── */
+  .services-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+  }
+  .services-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; gap: 0; overflow-x: auto;
+  }
+  .svc-tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 16px 22px;
+    font-size: 13px; font-weight: 500; color: var(--text-mid);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap; cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .svc-tab.active, .svc-tab:hover {
+    color: var(--hec-green);
+    border-bottom-color: var(--hec-green);
+  }
+  .svc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .svc-tab.active .svc-icon { background: var(--hec-gold-lt); }
+
+  /* ── MAIN CONTENT ────────────────────────────────────── */
+  .main {
+    max-width: 1100px; margin: 36px auto; padding: 0 48px;
+    display: grid; grid-template-columns: 1fr 340px; gap: 28px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; font-weight: 700; color: var(--text-dark);
+  }
+  .card-link {
+    font-size: 12px; color: var(--hec-green); font-weight: 500;
+    text-decoration: none;
+  }
+
+  /* Quick Services Grid */
+  .svc-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border);
+  }
+  .svc-item {
+    background: var(--white);
+    padding: 22px 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    text-align: center; cursor: pointer;
+    transition: background .12s;
+  }
+  .svc-item:hover { background: #f0f7f3; }
+  .svc-item-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--hec-gold-lt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .svc-item-label {
+    font-size: 12px; font-weight: 500; color: var(--text-mid); line-height: 1.3;
+  }
+  .svc-item-badge {
+    font-size: 10px; background: var(--hec-green); color: #fff;
+    padding: 2px 7px; border-radius: 10px;
+  }
+
+  /* Application Tracker */
+  .tracker-list { padding: 8px 0; }
+  .tracker-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tracker-item:last-child { border-bottom: none; }
+  .tracker-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .tracker-icon.green  { background: #E5F4EC; }
+  .tracker-icon.yellow { background: #FEF3DC; }
+  .tracker-icon.blue   { background: #E5EEF8; }
+  .tracker-icon.red    { background: #FCE8E8; }
+  .tracker-info { flex: 1; min-width: 0; }
+  .tracker-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+  .tracker-sub  { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .tracker-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-approved   { background: #E5F4EC; color: #0A5C36; }
+  .badge-processing { background: #FEF3DC; color: #8A6500; }
+  .badge-pending    { background: #E5EEF8; color: #1A4E8A; }
+  .badge-action     { background: #FCE8E8; color: #8A1A1A; }
+
+  /* Announcements */
+  .announce-list { padding: 4px 0; }
+  .announce-item {
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .announce-item:last-child { border-bottom: none; }
+  .announce-item:hover { background: #f8fbf9; }
+  .announce-date {
+    font-size: 10px; color: var(--text-light); font-weight: 500;
+    letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .announce-title {
+    font-size: 13px; font-weight: 500; color: var(--text-dark); line-height: 1.45;
+  }
+  .announce-cat {
+    display: inline-block; margin-top: 5px;
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+  }
+  .cat-scholar  { background: #E5F4EC; color: #0A5C36; }
+  .cat-attest   { background: var(--hec-gold-lt); color: #7A5A00; }
+  .cat-policy   { background: #E5EEF8; color: #1A4E8A; }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Status Tracker CTA */
+  .track-cta {
+    background: linear-gradient(135deg, var(--hec-green), #1a8a50);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    color: #fff;
+  }
+  .track-cta-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 700; margin-bottom: 8px;
+  }
+  .track-cta-desc { font-size: 12px; opacity: .8; margin-bottom: 16px; line-height: 1.55; }
+  .track-input {
+    width: 100%; background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 7px; padding: 9px 13px;
+    color: #fff; font-size: 13px; outline: none; margin-bottom: 10px;
+  }
+  .track-input::placeholder { color: rgba(255,255,255,0.55); }
+  .track-btn {
+    width: 100%; background: var(--hec-gold);
+    color: var(--hec-green); font-weight: 700; font-size: 13px;
+    padding: 10px; border-radius: 7px; border: none; cursor: pointer;
+  }
+
+  /* Help Shortcuts */
+  .help-list { padding: 4px 0; }
+  .help-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 18px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .help-item:last-child { border-bottom: none; }
+  .help-item:hover { background: #f8fbf9; }
+  .help-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--hec-green); flex-shrink: 0;
+  }
+  .help-text { font-size: 13px; color: var(--text-mid); font-weight: 500; flex: 1; }
+  .help-arrow { font-size: 14px; color: var(--text-light); }
+
+  /* Important Dates */
+  .dates-list { padding: 4px 0; }
+  .date-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .date-item:last-child { border-bottom: none; }
+  .date-block {
+    width: 40px; height: 40px; border-radius: 9px;
+    background: var(--hec-gold-lt); border: 1px solid var(--hec-gold);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .date-day   { font-size: 15px; font-weight: 700; color: var(--hec-green); line-height: 1; }
+  .date-month { font-size: 9px; font-weight: 600; color: var(--hec-gold); text-transform: uppercase; }
+  .date-info  { flex: 1; }
+  .date-title { font-size: 12px; font-weight: 600; color: var(--text-dark); }
+  .date-sub   { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+  /* ── FOOTER ──────────────────────────────────────────── */
+  .footer {
+    background: var(--hec-green);
+    color: rgba(255,255,255,0.75);
+    margin-top: 48px;
+    padding: 36px 48px 24px;
+  }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
+    padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .footer-brand-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px;
+  }
+  .footer-brand-desc { font-size: 12px; line-height: 1.65; max-width: 220px; }
+  .footer-col-title { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 12px; }
+  .footer-col a { display: block; font-size: 12px; color: rgba(255,255,255,0.65); text-decoration: none; margin-bottom: 7px; }
+  .footer-col a:hover { color: var(--hec-gold); }
+  .footer-bottom {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 16px; font-size: 11px;
+  }
+  .footer-bottom a { color: rgba(255,255,255,0.55); text-decoration: none; margin-left: 16px; }
+
+  /* ── SEARCH BAR (contextual) ────────────────────────── */
+  .search-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    display: flex; align-items: center;
+    padding: 0 8px 0 18px;
+    box-shadow: 0 2px 8px rgba(10,92,54,0.06);
+    margin-bottom: 24px;
+  }
+  .search-wrap input {
+    flex: 1; border: none; outline: none;
+    font-size: 14px; color: var(--text-dark);
+    background: transparent; padding: 12px 0;
+  }
+  .search-btn {
+    background: var(--hec-green); color: #fff;
+    border: none; border-radius: 30px;
+    padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  /* Progress steps */
+  .progress-steps {
+    display: flex; align-items: center; padding: 18px 22px; gap: 0;
+  }
+  .step { display: flex; align-items: center; flex: 1; }
+  .step-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .step-circle.done     { background: var(--hec-green); color: #fff; }
+  .step-circle.active   { background: var(--hec-gold); color: var(--hec-green); }
+  .step-circle.inactive { background: var(--border); color: var(--text-light); }
+  .step-label { font-size: 10px; font-weight: 500; color: var(--text-mid); margin-left: 6px; white-space: nowrap; }
+  .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 6px; }
+  .step-line.done { background: var(--hec-green); }
+
+  /* Notice Banner */
+  .notice-banner {
+    background: var(--hec-gold-lt);
+    border: 1px solid var(--hec-gold);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    font-size: 13px; color: #5A3E00; font-weight: 500;
+  }
+  .notice-icon { font-size: 16px; }
+
+  /* Mobile hint */
+  .mobile-hint {
+    background: var(--hec-green);
+    color: #fff; font-size: 11px;
+    text-align: center; padding: 6px;
+    letter-spacing: .3px;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--text-light); text-transform: uppercase;
+    margin-bottom: 16px; margin-top: 28px;
+  }
+
+  .mb-20 { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<!-- Mobile App Banner -->
+<div class="mobile-hint">📱 Mobile app now available — Download for better experience on small screens</div>
+
+<!-- TOP NAVIGATION -->
+<nav class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">HEC</div>
+    <div class="logo-text">
+      Higher Education Commission
+      <div class="logo-sub">Government of Pakistan</div>
+    </div>
+  </div>
+
+  <div class="topbar-nav">
+    <a href="#" class="active">Home</a>
+    <a href="#">Scholarships</a>
+    <a href="#">Attestation</a>
+    <a href="#">Universities</a>
+    <a href="#">Research</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+  </div>
+
+  <div class="topbar-actions">
+    <button class="btn-lang">اردو</button>
+    <!-- Mic voice-read button -->
+    <button class="btn-mic" id="micBtn" title="Toggle voice reading" onclick="toggleVoiceMode()">
+      <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8"  y1="23" x2="16" y2="23"/>
+      </svg>
+    </button>
+   <button id="sign-out" class="btn-login">Sign out</button>
+  </div>
+</nav>
+
+<!-- Voice tooltip element (shared, repositioned on hover) -->
+<div class="voice-tooltip" id="voiceTooltip"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-label">Pakistan's National Higher Education Authority</div>
+      <h1 class="hero-title">Your Gateway to<br><span>Academic Excellence</span></h1>
+      <p class="hero-desc">Access degree attestation, scholarships, equivalence certificates, and university accreditation — all in one clear, accessible portal designed for students and institutions.</p>
+      <div class="hero-btns">
+        <button class="btn-primary">Apply for Services →</button>
+        <button class="btn-outline">Track Application</button>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="stat-num">236+</div>
+        <div class="stat-label">Recognised Universities</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">14K+</div>
+        <div class="stat-label">Scholarships Awarded</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">2.1M</div>
+        <div class="stat-label">Documents Attested</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">48hr</div>
+        <div class="stat-label">Avg Processing Time</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK SERVICE TABS -->
+<div class="services-bar">
+  <div class="services-inner">
+    <a class="svc-tab active">
+      <div class="svc-icon">🎓</div>Degree Attestation
+    </a>
+    <a class="svc-tab">
+      <div class="svc-icon">🏅</div>Scholarships
+    </a>
+    <a class="svc-tab">
+      <div class="svc-icon">📋</div>Equivalence
+    </a>
+    <a class="svc-tab">
+      <div class="svc-icon">🏫</div>University Info
+    </a>
+    <a class="svc-tab">
+      <div class="svc-icon">🔬</div>Research Grants
+    </a>
+    <a class="svc-tab">
+      <div class="svc-icon">📊</div>Rankings
+    </a>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main">
+
+  <!-- LEFT COLUMN -->
+  <div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <input type="text" placeholder="Search for scholarships, attestation steps, FAQs…">
+      <button class="search-btn">Search</button>
+    </div>
+
+    <!-- Notice -->
+    <div class="notice-banner">
+      <span class="notice-icon">⚠️</span>
+      <span><strong>Important:</strong> HEC offices will be closed on 25–27 June for Eid holidays. Online services remain available 24/7.</span>
+    </div>
+
+    <!-- Quick Services -->
+    <div class="card mb-20">
+      <div class="card-header">
+        <div class="card-title">Quick Services</div>
+        <a href="#" class="card-link">All services →</a>
+      </div>
+      <div class="svc-grid">
+        <div class="svc-item">
+          <div class="svc-item-icon">📄</div>
+          <div class="svc-item-label">Apply for Attestation</div>
+          <span class="svc-item-badge">Online</span>
+        </div>
+        <div class="svc-item">
+          <div class="svc-item-icon">🌍</div>
+          <div class="svc-item-label">Foreign Degree Equivalence</div>
+        </div>
+        <div class="svc-item">
+          <div class="svc-item-icon">💰</div>
+          <div class="svc-item-label">Scholarship Portal</div>
+          <span class="svc-item-badge">New</span>
+        </div>
+        <div class="svc-item">
+          <div class="svc-item-icon">🏫</div>
+          <div class="svc-item-label">University Accreditation</div>
+        </div>
+        <div class="svc-item">
+          <div class="svc-item-icon">📆</div>
+          <div class="svc-item-label">Book Appointment</div>
+        </div>
+        <div class="svc-item">
+          <div class="svc-item-icon">📞</div>
+          <div class="svc-item-label">Live Chat Support</div>
+          <span class="svc-item-badge">24/7</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application Progress -->
+    <div class="card mb-20">
+      <div class="card-header">
+        <div class="card-title">Your Application Progress</div>
+        <a href="#" class="card-link">View details →</a>
+      </div>
+      <div class="progress-steps">
+        <div class="step">
+          <div class="step-circle done">✓</div>
+          <div class="step-label">Registration</div>
+        </div>
+        <div class="step-line done"></div>
+        <div class="step">
+          <div class="step-circle done">✓</div>
+          <div class="step-label">Documents</div>
+        </div>
+        <div class="step-line done"></div>
+        <div class="step">
+          <div class="step-circle active">3</div>
+          <div class="step-label">Verification</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+          <div class="step-circle inactive">4</div>
+          <div class="step-label">Payment</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+          <div class="step-circle inactive">5</div>
+          <div class="step-label">Collection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Applications -->
+    <div class="card mb-20">
+      <div class="card-header">
+        <div class="card-title">My Applications</div>
+        <a href="#" class="card-link">All applications →</a>
+      </div>
+      <div class="tracker-list">
+        <div class="tracker-item">
+          <div class="tracker-icon green">🎓</div>
+          <div class="tracker-info">
+            <div class="tracker-name">Degree Attestation — BSc CS</div>
+            <div class="tracker-sub">Ref: HEC-ATT-2024-004821 · Submitted Apr 10</div>
+          </div>
+          <span class="tracker-badge badge-approved">Approved</span>
+        </div>
+        <div class="tracker-item">
+          <div class="tracker-icon yellow">💰</div>
+          <div class="tracker-info">
+            <div class="tracker-name">HRDI Scholarship 2024</div>
+            <div class="tracker-sub">Ref: HEC-SCH-2024-019034 · Submitted Mar 28</div>
+          </div>
+          <span class="tracker-badge badge-processing">Processing</span>
+        </div>
+        <div class="tracker-item">
+          <div class="tracker-icon blue">🌍</div>
+          <div class="tracker-info">
+            <div class="tracker-name">Equivalence — UK Masters</div>
+            <div class="tracker-sub">Ref: HEC-EQV-2024-007213 · Submitted Apr 18</div>
+          </div>
+          <span class="tracker-badge badge-pending">Under Review</span>
+        </div>
+        <div class="tracker-item">
+          <div class="tracker-icon red">📋</div>
+          <div class="tracker-info">
+            <div class="tracker-name">Document Upload Required</div>
+            <div class="tracker-sub">Ref: HEC-ATT-2024-005500 · Action needed</div>
+          </div>
+          <span class="tracker-badge badge-action">Action Required</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcements -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Announcements & News</div>
+        <a href="#" class="card-link">View all →</a>
+      </div>
+      <div class="announce-list">
+        <div class="announce-item">
+          <div class="announce-date">Jun 5, 2025</div>
+          <div class="announce-title">HRDI MS/MPhil & PhD Scholarships 2025 — Applications Now Open for All Provinces</div>
+          <span class="announce-cat cat-scholar">Scholarships</span>
+        </div>
+        <div class="announce-item">
+          <div class="announce-date">Jun 1, 2025</div>
+          <div class="announce-title">Degree Attestation Processing Time Reduced to 48 Hours — New SLA Announced</div>
+          <span class="announce-cat cat-attest">Attestation</span>
+        </div>
+        <div class="announce-item">
+          <div class="announce-date">May 28, 2025</div>
+          <div class="announce-title">Updated Foreign Equivalence Policy for UK, US, and EU Degrees — Policy Circular 12/2025</div>
+          <span class="announce-cat cat-policy">Policy</span>
+        </div>
+        <div class="announce-item">
+          <div class="announce-date">May 20, 2025</div>
+          <div class="announce-title">New Batch of University Accreditation Reports Released — 28 Institutions Reviewed</div>
+          <span class="announce-cat cat-policy">Accreditation</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Track Application CTA -->
+    <div class="track-cta">
+      <div class="track-cta-title">🔍 Track Your Application</div>
+      <div class="track-cta-desc">Enter your reference number to get real-time status updates without logging in.</div>
+      <input class="track-input" type="text" placeholder="e.g. HEC-ATT-2024-004821">
+      <button class="track-btn">Track Now</button>
+    </div>
+
+    <!-- Help Centre -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Help Centre</div>
+        <a href="#" class="card-link">FAQs →</a>
+      </div>
+      <div class="help-list">
+        <div class="help-item">
+          <div class="help-dot"></div>
+          <div class="help-text">How to apply for attestation?</div>
+          <div class="help-arrow">›</div>
+        </div>
+        <div class="help-item">
+          <div class="help-dot"></div>
+          <div class="help-text">Accepted document formats</div>
+          <div class="help-arrow">›</div>
+        </div>
+        <div class="help-item">
+          <div class="help-dot"></div>
+          <div class="help-text">Payment methods & fees</div>
+          <div class="help-arrow">›</div>
+        </div>
+        <div class="help-item">
+          <div class="help-dot"></div>
+          <div class="help-text">Scholarship eligibility criteria</div>
+          <div class="help-arrow">›</div>
+        </div>
+        <div class="help-item">
+          <div class="help-dot"></div>
+          <div class="help-text">Contact regional office</div>
+          <div class="help-arrow">›</div>
+        </div>
+        <div class="help-item">
+          <div class="help-dot"></div>
+          <div class="help-text">Reset portal password</div>
+          <div class="help-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Important Dates -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Important Dates</div>
+      </div>
+      <div class="dates-list">
+        <div class="date-item">
+          <div class="date-block">
+            <div class="date-day">15</div>
+            <div class="date-month">Jun</div>
+          </div>
+          <div class="date-info">
+            <div class="date-title">HRDI Scholarship Deadline</div>
+            <div class="date-sub">Last date to apply online</div>
+          </div>
+        </div>
+        <div class="date-item">
+          <div class="date-block">
+            <div class="date-day">25</div>
+            <div class="date-month">Jun</div>
+          </div>
+          <div class="date-info">
+            <div class="date-title">Eid Holiday Closure</div>
+            <div class="date-sub">Offices closed Jun 25–27</div>
+          </div>
+        </div>
+        <div class="date-item">
+          <div class="date-block">
+            <div class="date-day">01</div>
+            <div class="date-month">Jul</div>
+          </div>
+          <div class="date-info">
+            <div class="date-title">New Attestation Fee Structure</div>
+            <div class="date-sub">Updated rates effective</div>
+          </div>
+        </div>
+        <div class="date-item">
+          <div class="date-block">
+            <div class="date-day">31</div>
+            <div class="date-month">Jul</div>
+          </div>
+          <div class="date-info">
+            <div class="date-title">Equivalence Applications Close</div>
+            <div class="date-sub">Batch 2025-II deadline</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Contact Us</div>
+      </div>
+      <div style="padding: 14px 18px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">📞</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-dark);">051-111-119-432</div>
+            <div style="font-size:11px;color:var(--text-light);">Mon – Fri, 9 AM – 5 PM</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">💬</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-dark);">Live Chat Available</div>
+            <div style="font-size:11px;color:var(--text-light);">24/7 automated + agent support</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">✉️</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-dark);">info@hec.gov.pk</div>
+            <div style="font-size:11px;color:var(--text-light);">Response within 2 business days</div>
+          </div>
+        </div>
+        <button style="width:100%;background:var(--hec-green);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;">
+          Start Live Chat
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-title">Higher Education Commission</div>
+      <div class="footer-brand-desc">Established in 2002 to improve standards of higher education across Pakistan and facilitate access to global opportunities for students.</div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Services</div>
+      <a href="#">Degree Attestation</a>
+      <a href="#">Scholarships</a>
+      <a href="#">Equivalence</a>
+      <a href="#">Accreditation</a>
+      <a href="#">Book Appointment</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Resources</div>
+      <a href="#">Policy Documents</a>
+      <a href="#">University List</a>
+      <a href="#">Research Journals</a>
+      <a href="#">Annual Reports</a>
+      <a href="#">Circulars</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Support</div>
+      <a href="#">Help Centre / FAQs</a>
+      <a href="#">Live Chat</a>
+      <a href="#">Regional Offices</a>
+      <a href="#">Accessibility</a>
+      <a href="#">Feedback</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Higher Education Commission, Government of Pakistan. All rights reserved.</span>
+    <div>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Use</a>
+      <a href="#">Accessibility</a>
+      <a href="#">Sitemap</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── VOICE NAV READER ─────────────────────────────────────────────── *
+   *  1. Click the mic button to toggle voice mode ON / OFF.             *
+   *  2. While ON, hover any .topbar-nav link → the browser reads it     *
+   *     aloud using the Web Speech API (SpeechSynthesis).               *
+   * ─────────────────────────────────────────────────────────────────── */
+
+  let voiceModeActive = false;
+
+  /* Pronounce a word / phrase using the browser's SpeechSynthesis API */
+  function pronounceWord(text) {
+    if (!window.speechSynthesis) return;          // browser doesn't support it
+    window.speechSynthesis.cancel();              // stop any ongoing speech first
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang  = 'en-US';
+    utter.rate  = 0.95;
+    utter.pitch = 1;
+    window.speechSynthesis.speak(utter);
+  }
+
+  /* Toggle voice mode on / off when mic button is clicked */
+  function toggleVoiceMode() {
+    voiceModeActive = !voiceModeActive;
+    const btn     = document.getElementById('micBtn');
+    const tooltip = document.getElementById('voiceTooltip');
+
+    if (voiceModeActive) {
+      btn.classList.add('mic-active');
+      btn.title = 'Voice mode ON — hover nav links to hear them';
+      pronounceWord('Voice mode on');
+    } else {
+      btn.classList.remove('mic-active');
+      btn.title = 'Toggle voice reading';
+      tooltip.classList.remove('show');
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  /* Attach hover listeners to every nav link */
+ function initNavVoiceListeners() {
+  const tooltip = document.getElementById('voiceTooltip');
+
+  // 1. Define all elements we want to listen to
+  const navLinks = document.querySelectorAll('.topbar-nav a');
+  const serviceTabs = document.querySelectorAll('.services-bar a');
+  const quickItems = document.querySelectorAll('.svc-item');
+
+  // 2. Helper function to handle the hover logic
+  function setupVoiceHover(elements, getTextCallback) {
+    elements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        if (!typeof voiceModeActive !== 'undefined' && !voiceModeActive) return;
+
+        const label = getTextCallback(el);
+        if (!label) return;
+
+        pronounceWord(label);
+
+        // Tooltip Positioning
+        const rect = el.getBoundingClientRect();
+        tooltip.textContent = label;
+        tooltip.style.left = rect.left + 'px';
+        tooltip.style.top = (rect.bottom + 6) + 'px';
+        tooltip.classList.add('show');
+      });
+
+      el.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('show');
+      });
+    });
+  }
+
+  // 3. Apply the logic to each group with specific text rules
+  
+  // For Top Nav: Just take the whole text
+  setupVoiceHover(navLinks, (el) => el.textContent.trim());
+
+  // For Services Bar: Skip the .svc-icon div
+  setupVoiceHover(serviceTabs, (el) => {
+    const icon = el.querySelector('.svc-icon');
+    return icon ? icon.nextSibling.textContent.trim() : el.textContent.trim();
+  });
+
+  // For Quick Services: Specifically target the .svc-item-label div
+  setupVoiceHover(quickItems, (el) => {
+    const labelEl = el.querySelector('.svc-item-label');
+    return labelEl ? labelEl.textContent.trim() : "";
+  });
+}
+
+  /* Run after DOM is ready */
+  document.addEventListener('DOMContentLoaded', initNavVoiceListeners);
+</script>
+<script
+  defer
+  crossorigin="anonymous"
+  src="https://crisp-shad-93.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript"
+></script>
+
+<script
+  defer
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_Y3Jpc3Atc2hhZC05My5jbGVyay5hY2NvdW50cy5kZXYk"
+  src="https://crisp-shad-93.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+<script>
+  window.addEventListener('load', async () => {
+    await Clerk.load();
+
+    if (!Clerk.user) {
+      window.location.href = '/login';  // not logged in → kick to login
+    }
+    // else: user is logged in, page loads normally
+  });
+</script>
+ <script  src="/static/Logout.js"></script>
+</body>
+</html>
