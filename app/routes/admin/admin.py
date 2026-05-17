@@ -1,6 +1,8 @@
 import os
 
 import MySQLdb
+from clerk_backend_api import AuthenticateRequestOptions, authenticate_request
+from clerk_backend_api import authenticate_request
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for
 import secrets
 
@@ -33,7 +35,6 @@ auth_blueprint = Blueprint('auth', __name__)
 
 # Hardcoded Admin Credentials
 ADMIN_EMAIL = "shaeelh001@gmail.com"
-ADMIN_PASSWORD = "SuperSecretAdminPassword123"  # Change this to your actual password
 
 def generate_otp():
     # Generates a secure, random 6-digit number string
@@ -44,10 +45,6 @@ def admin_login():
     return render_template('admin_login.html')
 @auth_blueprint.route('/dashboard')
 def admin_dashboard():
-    # If the session key doesn't exist, they can't see the dashboard
-
-    if not session.get('is_admin_logged_in'):
-        return render_template('admin_login.html')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM cnic")
     cnic_data = cursor.fetchall()
@@ -115,3 +112,25 @@ def admin_check():
         return jsonify({"success": True}), 200
     
     return jsonify({"success": False}), 401
+@auth_blueprint.route('/check_admin', methods=['POST'])
+def check_admin():
+    print("Admin check endpoint hit")
+    state = authenticate_request(
+        request,
+        AuthenticateRequestOptions(
+            secret_key=os.getenv("CLERK_SECRET_KEY"),
+            # Both URLs must be inside this list within the Options object
+            authorized_parties=[
+                "http://localhost:5000", 
+                "http://127.0.0.1:5000"
+            ],
+        )
+    )
+    try:
+        email = state.payload.get('email')
+        print(email)
+    except Exception as e:
+        print(f"Error extracting email from token: {e}")
+        return jsonify({"isAdmin": False}), 200
+    if email == ADMIN_EMAIL:
+        return jsonify({"isAdmin": True}), 200

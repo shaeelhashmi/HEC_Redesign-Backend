@@ -4,29 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign In — HEC Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
 <body>
-<div id="app"></div>
+
+<div class="container">
+  <div class="left">
+    <div class="logo">
+      <div class="logo-box">HEC</div>
+      <div class="logo-text">
+        <strong>Higher Education Commission</strong>
+        <span>Government of Pakistan</span>
+      </div>
+    </div>
+    <h1>Your Gateway to <em>Academic Excellence</em></h1>
+    <p>Access degree attestation, scholarships, equivalence certificates, and university accreditation — all in one portal.</p>
+  </div>
+    <div class="right">
+ <div id="app"></div>
+ </div>
+</div>
 
 <script
-  defer
-  crossorigin="anonymous"
+  defer crossorigin="anonymous"
   src="https://crisp-shad-93.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
   type="text/javascript"
 ></script>
-
 <script
-  defer
-  crossorigin="anonymous"
+  defer crossorigin="anonymous"
   data-clerk-publishable-key="pk_test_Y3Jpc3Atc2hhZC05My5jbGVyay5hY2NvdW50cy5kZXYk"
   src="https://crisp-shad-93.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
   type="text/javascript"
 ></script>
 
 <script>
-
- window.addEventListener('load', async function () {
+   window.addEventListener('load', async function () {
     await Clerk.load({
       ui: { ClerkUI: window.__internal_ClerkUICtor },
     })
@@ -44,5 +57,6 @@
     }
   })
 </script>
+
 </body>
 </html>

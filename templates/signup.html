@@ -2,10 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sign Up — HEC Portal</title>
+  <title>Sign Up — HEC Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
 <body>
-    <div id="app"></div>
+
+<div class="container">
+  <div class="left">
+    <div class="logo">
+      <div class="logo-box">HEC</div>
+      <div class="logo-text">
+        <strong>Higher Education Commission</strong>
+        <span>Government of Pakistan</span>
+      </div>
+      </div>
+    <h1>Join the <em>HEC Portal</em></h1>
+    <p>Create your account to access degree attestation, scholarships, equivalence certificates, and university accreditation services.</p>
+
+   
+  </div>
+  
+  <div class="right">
+ <div id="app"></div>
+ </div>
 
 
 <script
