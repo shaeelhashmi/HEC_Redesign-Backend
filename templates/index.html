@@ -781,12 +781,24 @@
   <div class="sidebar">
 
     <!-- Track Application CTA -->
+   {% if status == "Unverified" %}
     <div class="track-cta">
-      <div class="track-cta-title">Verify CNIC</div>
-      <div class="track-cta-desc">Add a picture of your CNIC to verify your identity</div>
-      <input class="track-input" type="file" accept="image/*" placeholder="Upload CNIC image" id="cnic">
-      <button class="track-btn" id="verify_cnic" >Verify Now</button>
+        <div class="track-cta-title">Verify CNIC</div>
+        <div class="track-cta-desc">Add a picture of your CNIC to verify your identity</div>
+        <input class="track-input" type="file" accept="image/*" id="cnic">
+        <button class="track-btn" id="verify_cnic">Verify Now</button>
     </div>
+{% elif status == "Under Review" %}
+    <div class="track-cta" style="background: var(--hec-gold);">
+        <div class="track-cta-title" style="color: var(--hec-green);">Under Review</div>
+        <div class="track-cta-desc" style="color: var(--hec-green);">We are currently verifying your documents. Please check back later.</div>
+    </div>
+{% else %}
+    <div class="track-cta" style="background: #E5F4EC; border: 1px solid var(--hec-green);">
+        <div class="track-cta-title" style="color: var(--hec-green);">✓ Identity Verified</div>
+        <div class="track-cta-desc" style="color: var(--hec-green);">Your CNIC has been successfully verified.</div>
+    </div>
+{% endif %}
 
     <!-- Help Centre -->
     <div class="card">

@@ -4,9 +4,8 @@ import os
 from dotenv import load_dotenv
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
-import re
+from app.routes.admin.admin import auth_blueprint
 load_dotenv()
-from app.auth import require_auth
 app = Flask(__name__)
 
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "shaeel_dev_secret_123")
@@ -16,7 +15,7 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_SECURE=False,  # Set to False because you are using http, not https
     SESSION_COOKIE_HTTPONLY=True,
-    PERMANENT_SESSION_LIFETIME=3600 # 1 hour
+    PERMANENT_SESSION_LIFETIME=604800 # 1 hour
 )
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -25,7 +24,7 @@ app.config['MYSQL_DB'] = os.getenv("MYSQL_DB")
 mysql = MySQL(app)
 
 CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
-
+app.register_blueprint(auth_blueprint, url_prefix='/admin')
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -34,7 +33,9 @@ def index():
 # Fixed: Explicitly added methods=['POST'] argument
 
 from clerk_backend_api import Clerk, authenticate_request, AuthenticateRequestOptions
-
+@app.route('/signup')
+def signup_page():
+    return render_template('signup.html')
 @app.route('/api/login-session', methods=['POST'])
 def login_session():
     data = request.get_json()
@@ -42,12 +43,6 @@ def login_session():
     
     if not email:
         return jsonify({"error": "No email provided"}), 400
-
-    # Initialize session
-    session.permanent = True
-    session["user_email"] = email
-
-    # Initialize User in DB
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     try:
         cursor.execute("SELECT email FROM cnic WHERE email = %s", (email,))
@@ -68,7 +63,22 @@ def login_session():
 
 @app.route('/dashboard')
 def dashboard():
-    email = session.get('user_email')
+    state = authenticate_request(
+        request,
+        AuthenticateRequestOptions(
+            secret_key=os.getenv("CLERK_SECRET_KEY"),
+            # Both URLs must be inside this list within the Options object
+            authorized_parties=[
+                "http://localhost:5000", 
+                "http://127.0.0.1:5000"
+            ],
+        )
+    )
+    try:
+        email = state.payload.get('email')
+    except Exception as e:
+        print(f"Error extracting email from token: {e}")
+        return redirect(url_for('login_page'))
     if not email:
         return redirect(url_for('login_page'))
 
@@ -91,8 +101,7 @@ def dashboard():
             status = "CNIC Verified"
 
     # Pass everything to your index.html
-    return render_template('index.html', 
-                          )
+    return render_template('index.html', status=status)
 
 @app.route('/sso-callback')
 def sso_callback():
@@ -115,6 +124,7 @@ def verify_cnic():
             ],
         )
     )
+    print(state)
     if not state.is_signed_in:
         # (Keep your error handling here)
         return jsonify({"error": "Unauthorized"}), 401
@@ -132,6 +142,10 @@ def verify_cnic():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # GET THE URL HERE - This is what you'll save to your SQL table later
         secure_url = result.get('secure_url')
+        cursor.execute("UPDATE cnic SET CNIC_image = %s WHERE email = %s", (secure_url, state.payload.get('email')))
+        mysql.connection.commit()
+        cursor.close()
+        
         return jsonify({
             "status": "success",
             "url": secure_url,
@@ -139,6 +153,6 @@ def verify_cnic():
         }), 200
     else:
         return jsonify({"error": "Upload failed"}), 500
-    
+
 if __name__ == '__main__':
     app.run(debug=True)

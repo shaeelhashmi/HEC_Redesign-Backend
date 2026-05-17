@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEC Admin — CNIC Verification</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark:  #1a5c2e;
+    --green:       #2a7a42;
+    --green-mid:   #3a9455;
+    --green-light: #4db86a;
+    --gold:        #c8902a;
+    --gold-light:  #e6a832;
+    --gold-bg:     #fdf3e0;
+    --white:       #ffffff;
+    --off-white:   #f7f9f7;
+    --text-dark:   #1a2e1d;
+    --text-mid:    #3d5c42;
+    --text-light:  #7a9b80;
+    --border:      #d0e4d4;
+    --shadow:      0 2px 16px rgba(26,92,46,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--off-white);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ── Top announcement bar ── */
+  .top-bar {
+    background: var(--green-dark);
+    color: rgba(255,255,255,0.88);
+    text-align: center;
+    font-size: 12.5px;
+    padding: 7px 16px;
+    letter-spacing: 0.2px;
+  }
+
+  /* ── Navbar ── */
+  nav {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 68px;
+    box-shadow: 0 2px 8px rgba(26,92,46,0.07);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hec-logo {
+    width: 46px; height: 46px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  .brand-text h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.1;
+  }
+
+  .brand-text p {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 400;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-mid);
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover { background: var(--off-white); color: var(--green); }
+  .nav-links a.active {
+    background: var(--green);
+    color: var(--white);
+  }
+
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+
+  .btn-signout {
+    background: var(--gold);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-signout:hover { background: var(--gold-light); }
+
+  /* ── Page body ── */
+  .page-body {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 36px 24px 60px;
+  }
+
+  /* ── Page title ── */
+  .page-header {
+    margin-bottom: 28px;
+  }
+
+  .page-header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--text-dark);
+    line-height: 1.15;
+  }
+
+  .page-header h1 span { color: var(--green); }
+
+  /* ── Stats ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .stat-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-box::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .stat-box.s-total::after  { background: var(--green-mid); }
+  .stat-box.s-verified::after { background: #2a9d5c; }
+  .stat-box.s-unverified::after { background: #d94f4f; }
+  .stat-box.s-pending::after { background: var(--gold); }
+
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stat-box.s-total .stat-num     { color: var(--green); }
+  .stat-box.s-verified .stat-num  { color: #2a9d5c; }
+  .stat-box.s-unverified .stat-num{ color: #d94f4f; }
+  .stat-box.s-pending .stat-num   { color: var(--gold); }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    width: 15px; height: 15px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 8px;
+    padding: 9px 14px 9px 36px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--text-light); }
+  .search-input:focus { border-color: var(--green); }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+  }
+
+  .flt {
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 7px;
+    padding: 7px 15px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .flt:hover { border-color: var(--green); color: var(--green); }
+  .flt.active { background: var(--green); border-color: var(--green); color: var(--white); }
+
+  /* ── Table ── */
+  .table-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    background: var(--green-dark);
+  }
+
+  th {
+    padding: 14px 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  th:nth-child(4), th:nth-child(5) { text-align: center; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f2f9f4; }
+
+  td {
+    padding: 15px 18px;
+    font-size: 13.5px;
+    vertical-align: middle;
+  }
+
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--green);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .email-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 13.5px;
+  }
+
+  .uid-text {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 1px;
+  }
+
+  .reg-date { color: var(--text-light); font-size: 12.5px; }
+
+  /* Status badge (display only) */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .status-badge.verified   { background: #e6f7ee; color: #1e7e4a; border: 1px solid #b2dfc6; }
+  .status-badge.unverified { background: #fdecea; color: #c0392b; border: 1px solid #f5b7b1; }
+  .status-badge.pending    { background: #fef9ec; color: #a07800; border: 1px solid #f5e09a; }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .verified .dot   { background: #1e7e4a; }
+  .unverified .dot { background: #c0392b; }
+  .pending .dot    { background: #a07800; }
+
+  /* ── Action buttons ── */
+  .action-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .btn-approve, .btn-reject {
+    border: none;
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-approve {
+    background: var(--green);
+    color: var(--white);
+  }
+  .btn-approve:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(42,122,66,0.3); }
+  .btn-approve:active { transform: translateY(0); }
+
+  .btn-reject {
+    background: #fdecea;
+    color: #c0392b;
+    border: 1.5px solid #f5b7b1;
+  }
+  .btn-reject:hover { background: #c0392b; color: var(--white); border-color: #c0392b; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(192,57,43,0.25); }
+  .btn-reject:active { transform: translateY(0); }
+
+  /* disabled state when already decided */
+  .btn-approve:disabled, .btn-reject:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 999;
+  }
+
+  .toast {
+    background: var(--white);
+    border-left: 4px solid var(--green);
+    border-radius: 8px;
+    padding: 12px 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.8s both;
+    max-width: 300px;
+  }
+
+  .toast.reject { border-color: #c0392b; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(20px); }
+  }
+
+  /* ── Empty ── */
+  .empty {
+    text-align: center;
+    padding: 52px 20px;
+    color: var(--text-light);
+    font-size: 13px;
+    display: none;
+  }
+
+  /* ── Footer bar ── */
+  .table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--off-white);
+    font-size: 12px;
+    color: var(--text-light);
+  }
+
+  /* ── Green footer strip ── */
+  .bottom-strip {
+    background: var(--green-dark);
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    padding: 18px 32px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .strip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .strip-item span { font-size: 18px; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="top-bar">🇵🇰 Higher Education Commission — Admin Portal | CNIC Verification Management System</div>
+
+<!-- Navbar -->
+<nav>
+  <div class="nav-brand">
+    <div class="hec-logo">HEC</div>
+    <div class="brand-text">
+      <h2>Higher Education Commission</h2>
+      <p>Government of Pakistan</p>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Scholarships</a></li>
+    <li><a href="#">Attestation</a></li>
+    <li><a href="#">Universities</a></li>
+    <li><a href="#" class="active">Admin</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="btn-signout">Sign out</button>
+  </div>
+</nav>
+
+<!-- Page -->
+<div class="page-body">
+
+  <div class="page-header">
+    <div class="eyebrow">Admin Dashboard</div>
+    <h1>User CNIC <span>Verification</span> Panel</h1>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box s-total">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-num" id="s-total">0</div>
+    </div>
+    <div class="stat-box s-verified">
+      <div class="stat-label">Verified</div>
+      <div class="stat-num" id="s-verified">0</div>
+    </div>
+    <div class="stat-box s-unverified">
+      <div class="stat-label">Not Verified</div>
+      <div class="stat-num" id="s-unverified">0</div>
+    </div>
+    <div class="stat-box s-pending">
+      <div class="stat-label">Awaiting Review</div>
+      <div class="stat-num" id="s-pending">0</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="Search by email or user ID…">
+    </div>
+    <div class="filters">
+      <button class="flt active" data-f="all">All</button>
+      <button class="flt" data-f="verified">Verified</button>
+      <button class="flt" data-f="unverified">Not Verified</button>
+      <button class="flt" data-f="pending">Pending</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User / Email</th>
+          <th>Registered</th>
+          <th style="text-align:center">CNIC Status</th>
+          <th style="text-align:center">Admin Action</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyState">No users match the current filter.</div>
+    <div class="table-footer">
+      <span id="footerText">Loading…</span>
+      <span>HEC Admin Panel — Confidential</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Green footer strip -->
+<div class="bottom-strip">
+  <div class="strip-item"><span>🎓</span> Degree Attestation</div>
+  <div class="strip-item"><span>🏅</span> Scholarships</div>
+  <div class="strip-item"><span>📋</span> Equivalence</div>
+  <div class="strip-item"><span>🏛️</span> University Info</div>
+  <div class="strip-item"><span>🔬</span> Research Grants</div>
+  <div class="strip-item"><span>📊</span> Rankings</div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const users = [
+    { id:1, uid:'USR-2401', email:'ali.hassan@gmail.com',      reg:'12 Jan 2025', status:'pending' },
+    { id:2, uid:'USR-2402', email:'sana.malik@outlook.com',    reg:'18 Jan 2025', status:'pending' },
+    { id:3, uid:'USR-2403', email:'usman.raza@yahoo.com',      reg:'02 Feb 2025', status:'verified' },
+    { id:4, uid:'USR-2404', email:'fatima.butt@hotmail.com',   reg:'14 Feb 2025', status:'pending' },
+    { id:5, uid:'USR-2405', email:'hamza.chaudry@gmail.com',   reg:'01 Mar 2025', status:'verified' },
+    { id:6, uid:'USR-2406', email:'ayesha.noor@gmail.com',     reg:'09 Mar 2025', status:'unverified' },
+    { id:7, uid:'USR-2407', email:'bilal.qureshi@live.com',    reg:'22 Mar 2025', status:'pending' },
+    { id:8, uid:'USR-2408', email:'zainab.syed@gmail.com',     reg:'05 Apr 2025', status:'verified' },
+    { id:9, uid:'USR-2409', email:'omar.farooq@yahoo.com',     reg:'17 Apr 2025', status:'unverified' },
+    { id:10,uid:'USR-2410', email:'nida.hussain@gmail.com',    reg:'28 Apr 2025', status:'pending' },
+    { id:11,uid:'USR-2411', email:'tariq.mehmood@gmail.com',   reg:'03 May 2025', status:'unverified' },
+    { id:12,uid:'USR-2412', email:'rida.anwar@outlook.com',    reg:'10 May 2025', status:'pending' },
+  ];
+
+  let filter = 'all', search = '';
+
+  function initials(email){ return email.slice(0,2).toUpperCase(); }
+
+  const statusBadge = {
+    verified:   `<span class="status-badge verified"><span class="dot"></span>Verified</span>`,
+    unverified: `<span class="status-badge unverified"><span class="dot"></span>Not Verified</span>`,
+    pending:    `<span class="status-badge pending"><span class="dot"></span>Pending Review</span>`,
+  };
+
+  function approve(id){
+    const u = users.find(x=>x.id===id);
+    u.status = 'verified';
+    render(); toast(`✅ CNIC Approved for ${u.email}`, false);
+  }
+
+  function reject(id){
+    const u = users.find(x=>x.id===id);
+    u.status = 'unverified';
+    render(); toast(`❌ CNIC Rejected for ${u.email}`, true);
+  }
+
+  function toast(msg, isReject){
+    const el = document.createElement('div');
+    el.className = 'toast' + (isReject ? ' reject' : '');
+    el.textContent = msg;
+    const c = document.getElementById('toastContainer');
+    c.appendChild(el);
+    setTimeout(()=>el.remove(), 3400);
+  }
+
+  function render(){
+    const tbody = document.getElementById('tbody');
+    const empty = document.getElementById('emptyState');
+    const footer = document.getElementById('footerText');
+
+    document.getElementById('s-total').textContent     = users.length;
+    document.getElementById('s-verified').textContent  = users.filter(u=>u.status==='verified').length;
+    document.getElementById('s-unverified').textContent= users.filter(u=>u.status==='unverified').length;
+    document.getElementById('s-pending').textContent   = users.filter(u=>u.status==='pending').length;
+
+    const list = users.filter(u=>{
+      const fm = filter==='all' || u.status===filter;
+      const sm = u.email.toLowerCase().includes(search) || u.uid.toLowerCase().includes(search);
+      return fm && sm;
+    });
+
+    if(!list.length){
+      tbody.innerHTML=''; empty.style.display='block';
+      footer.textContent='No users found.'; return;
+    }
+
+    empty.style.display='none';
+    footer.textContent=`Showing ${list.length} of ${users.length} registered users`;
+
+    tbody.innerHTML = list.map((u,i)=>`
+      <tr>
+        <td style="color:var(--text-light);font-size:12px;">${String(i+1).padStart(2,'0')}</td>
+        <td>
+          <div class="user-cell">
+            <div class="avatar">${initials(u.email)}</div>
+            <div>
+              <div class="email-name">${u.email}</div>
+              <div class="uid-text">${u.uid}</div>
+            </div>
+          </div>
+        </td>
+        <td class="reg-date">${u.reg}</td>
+        <td style="text-align:center">${statusBadge[u.status]}</td>
+        <td>
+          <div class="action-cell">
+            <button class="btn-approve"
+              onclick="approve(${u.id})"
+              ${u.status==='verified' ? 'disabled title="Already verified"' : ''}>
+              ✓ Approve
+            </button>
+            <button class="btn-reject"
+              onclick="reject(${u.id})"
+              ${u.status==='unverified' ? 'disabled title="Already rejected"' : ''}>
+              ✕ Reject
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  document.querySelectorAll('.flt').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.flt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      filter = b.dataset.f;
+      render();
+    });
+  });
+
+  document.getElementById('searchInput').addEventListener('input',e=>{
+    search=e.target.value.toLowerCase(); render();
+  });
+
+  render();
+</script>
+</body>
+</html>
