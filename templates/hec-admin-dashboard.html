@@ -277,7 +277,6 @@
   .table-card {
     background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 14px;
     overflow: hidden;
     box-shadow: var(--shadow);
   }
@@ -491,79 +490,16 @@
   .strip-item span { font-size: 18px; }
 </style>
 </head>
+<div id="imageModal" 
+     style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; cursor: zoom-out;" 
+     onclick="closeModal()">
+    <span style="position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer;">&times;</span>
+    <img id="modalImg" style="max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+</div>
 <body>
 
-<!-- Top bar -->
-<div class="top-bar">🇵🇰 Higher Education Commission — Admin Portal | CNIC Verification Management System</div>
-
-<!-- Navbar -->
-<nav>
-  <div class="nav-brand">
-    <div class="hec-logo">HEC</div>
-    <div class="brand-text">
-      <h2>Higher Education Commission</h2>
-      <p>Government of Pakistan</p>
-    </div>
-  </div>
-  <ul class="nav-links">
-    <li><a href="#">Home</a></li>
-    <li><a href="#">Scholarships</a></li>
-    <li><a href="#">Attestation</a></li>
-    <li><a href="#">Universities</a></li>
-    <li><a href="#" class="active">Admin</a></li>
-    <li><a href="#">Contact</a></li>
-  </ul>
-  <div class="nav-right">
-    <button class="btn-signout">Sign out</button>
-  </div>
-</nav>
-
-<!-- Page -->
-<div class="page-body">
-
-  <div class="page-header">
-    <div class="eyebrow">Admin Dashboard</div>
-    <h1>User CNIC <span>Verification</span> Panel</h1>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-box s-total">
-      <div class="stat-label">Total Users</div>
-      <div class="stat-num" id="s-total">0</div>
-    </div>
-    <div class="stat-box s-verified">
-      <div class="stat-label">Verified</div>
-      <div class="stat-num" id="s-verified">0</div>
-    </div>
-    <div class="stat-box s-unverified">
-      <div class="stat-label">Not Verified</div>
-      <div class="stat-num" id="s-unverified">0</div>
-    </div>
-    <div class="stat-box s-pending">
-      <div class="stat-label">Awaiting Review</div>
-      <div class="stat-num" id="s-pending">0</div>
-    </div>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
-      <input class="search-input" id="searchInput" type="text" placeholder="Search by email or user ID…">
-    </div>
-    <div class="filters">
-      <button class="flt active" data-f="all">All</button>
-      <button class="flt" data-f="verified">Verified</button>
-      <button class="flt" data-f="unverified">Not Verified</button>
-      <button class="flt" data-f="pending">Pending</button>
-    </div>
-  </div>
-
-  <!-- Table -->
-  <div class="table-card">
+<!-- Toasts -->
+<div class="table-card">
     <table>
       <thead>
         <tr>
@@ -574,147 +510,83 @@
           <th style="text-align:center">Admin Action</th>
         </tr>
       </thead>
-      <tbody id="tbody"></tbody>
+      <tbody id="tbody">
+        {% for user in cnic_data %}
+        <tr>
+          <td style="color:var(--text-light);font-size:12px;">{{ "%02d" | format(loop.index) }}</td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar">{{ user.email[0].upper() if user.email else 'U' }}</div>
+              <div>
+                <div class="email-name">{{ user.email }}</div>
+
+              </div>
+            </div>
+          </td>
+          <td class="reg-date">Pending Action</td>
+          <td style="text-align:center">
+            <span class="status-badge pending"><span class="dot"></span>Awaiting Review</span>
+          </td>
+          <td>
+ <div class="action-cell">
+  {% if user.CNIC_Image %}
+    <img src="{{ user.CNIC_Image }}" 
+         alt="CNIC" 
+         style="width: 50px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid var(--border);"
+         onclick="enlargeImage('{{ user.CNIC_Image }}')">
+  {% else %}
+    <span style="font-size: 11px; color: var(--text-light);">No Image</span>
+  {% endif %}
+<input type="text" 
+         id="cnic_input_{{ user.email|replace('@', '_')|replace('.', '_') }}" 
+         class="admin-input" 
+         placeholder="13-digit CNIC"
+         maxlength="13">
+
+  <button class="btn-approve" onclick="verifyUser('{{ user.email }}')">✓ Approve</button>
+  <button class="btn-reject" onclick="deleteEntry('{{ user.email }}')">✕ Delete</button>
+</div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-light);">
+            No pending CNIC verifications found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
-    <div class="empty" id="emptyState">No users match the current filter.</div>
+    
     <div class="table-footer">
-      <span id="footerText">Loading…</span>
+      <span id="footerText">Showing {{ cnic_data|length }} pending requests</span>
       <span>HEC Admin Panel — Confidential</span>
     </div>
   </div>
 
-</div>
-
-<!-- Green footer strip -->
-<div class="bottom-strip">
-  <div class="strip-item"><span>🎓</span> Degree Attestation</div>
-  <div class="strip-item"><span>🏅</span> Scholarships</div>
-  <div class="strip-item"><span>📋</span> Equivalence</div>
-  <div class="strip-item"><span>🏛️</span> University Info</div>
-  <div class="strip-item"><span>🔬</span> Research Grants</div>
-  <div class="strip-item"><span>📊</span> Rankings</div>
-</div>
-
-<!-- Toasts -->
-<div class="toast-container" id="toastContainer"></div>
-
 <script>
-  const users = [
-    { id:1, uid:'USR-2401', email:'ali.hassan@gmail.com',      reg:'12 Jan 2025', status:'pending' },
-    { id:2, uid:'USR-2402', email:'sana.malik@outlook.com',    reg:'18 Jan 2025', status:'pending' },
-    { id:3, uid:'USR-2403', email:'usman.raza@yahoo.com',      reg:'02 Feb 2025', status:'verified' },
-    { id:4, uid:'USR-2404', email:'fatima.butt@hotmail.com',   reg:'14 Feb 2025', status:'pending' },
-    { id:5, uid:'USR-2405', email:'hamza.chaudry@gmail.com',   reg:'01 Mar 2025', status:'verified' },
-    { id:6, uid:'USR-2406', email:'ayesha.noor@gmail.com',     reg:'09 Mar 2025', status:'unverified' },
-    { id:7, uid:'USR-2407', email:'bilal.qureshi@live.com',    reg:'22 Mar 2025', status:'pending' },
-    { id:8, uid:'USR-2408', email:'zainab.syed@gmail.com',     reg:'05 Apr 2025', status:'verified' },
-    { id:9, uid:'USR-2409', email:'omar.farooq@yahoo.com',     reg:'17 Apr 2025', status:'unverified' },
-    { id:10,uid:'USR-2410', email:'nida.hussain@gmail.com',    reg:'28 Apr 2025', status:'pending' },
-    { id:11,uid:'USR-2411', email:'tariq.mehmood@gmail.com',   reg:'03 May 2025', status:'unverified' },
-    { id:12,uid:'USR-2412', email:'rida.anwar@outlook.com',    reg:'10 May 2025', status:'pending' },
-  ];
-
-  let filter = 'all', search = '';
-
-  function initials(email){ return email.slice(0,2).toUpperCase(); }
-
-  const statusBadge = {
-    verified:   `<span class="status-badge verified"><span class="dot"></span>Verified</span>`,
-    unverified: `<span class="status-badge unverified"><span class="dot"></span>Not Verified</span>`,
-    pending:    `<span class="status-badge pending"><span class="dot"></span>Pending Review</span>`,
-  };
-
-  function approve(id){
-    const u = users.find(x=>x.id===id);
-    u.status = 'verified';
-    render(); toast(`✅ CNIC Approved for ${u.email}`, false);
+  // This function fixes your ReferenceError
+  function enlargeImage(src) {
+    const modal = document.getElementById("imageModal");
+    const modalImg = document.getElementById("modalImg");
+    
+    modal.style.display = "flex";
+    modalImg.src = src;
+    
+    // Optional: Stop the background from scrolling
+    document.body.style.overflow = "hidden";
   }
 
-  function reject(id){
-    const u = users.find(x=>x.id===id);
-    u.status = 'unverified';
-    render(); toast(`❌ CNIC Rejected for ${u.email}`, true);
+  function closeModal() {
+    document.getElementById("imageModal").style.display = "none";
+    document.body.style.overflow = "auto";
   }
 
-  function toast(msg, isReject){
-    const el = document.createElement('div');
-    el.className = 'toast' + (isReject ? ' reject' : '');
-    el.textContent = msg;
-    const c = document.getElementById('toastContainer');
-    c.appendChild(el);
-    setTimeout(()=>el.remove(), 3400);
-  }
-
-  function render(){
-    const tbody = document.getElementById('tbody');
-    const empty = document.getElementById('emptyState');
-    const footer = document.getElementById('footerText');
-
-    document.getElementById('s-total').textContent     = users.length;
-    document.getElementById('s-verified').textContent  = users.filter(u=>u.status==='verified').length;
-    document.getElementById('s-unverified').textContent= users.filter(u=>u.status==='unverified').length;
-    document.getElementById('s-pending').textContent   = users.filter(u=>u.status==='pending').length;
-
-    const list = users.filter(u=>{
-      const fm = filter==='all' || u.status===filter;
-      const sm = u.email.toLowerCase().includes(search) || u.uid.toLowerCase().includes(search);
-      return fm && sm;
-    });
-
-    if(!list.length){
-      tbody.innerHTML=''; empty.style.display='block';
-      footer.textContent='No users found.'; return;
-    }
-
-    empty.style.display='none';
-    footer.textContent=`Showing ${list.length} of ${users.length} registered users`;
-
-    tbody.innerHTML = list.map((u,i)=>`
-      <tr>
-        <td style="color:var(--text-light);font-size:12px;">${String(i+1).padStart(2,'0')}</td>
-        <td>
-          <div class="user-cell">
-            <div class="avatar">${initials(u.email)}</div>
-            <div>
-              <div class="email-name">${u.email}</div>
-              <div class="uid-text">${u.uid}</div>
-            </div>
-          </div>
-        </td>
-        <td class="reg-date">${u.reg}</td>
-        <td style="text-align:center">${statusBadge[u.status]}</td>
-        <td>
-          <div class="action-cell">
-            <button class="btn-approve"
-              onclick="approve(${u.id})"
-              ${u.status==='verified' ? 'disabled title="Already verified"' : ''}>
-              ✓ Approve
-            </button>
-            <button class="btn-reject"
-              onclick="reject(${u.id})"
-              ${u.status==='unverified' ? 'disabled title="Already rejected"' : ''}>
-              ✕ Reject
-            </button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  document.querySelectorAll('.flt').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.querySelectorAll('.flt').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      filter = b.dataset.f;
-      render();
-    });
+  // Also close if they hit the 'Esc' key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape") closeModal();
   });
-
-  document.getElementById('searchInput').addEventListener('input',e=>{
-    search=e.target.value.toLowerCase(); render();
-  });
-
-  render();
 </script>
+<script src="{{ url_for('static', filename='AddCNIC.js') }}"></script>
 </body>
 </html>

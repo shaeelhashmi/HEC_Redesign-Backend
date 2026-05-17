@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+  <script
+    defer
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_Y3Jpc3Atc2hhZC05My5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://crisp-shad-93.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
+  <script>
+window.addEventListener('load', async () => {
+    await Clerk.load();
+  
+    await Clerk.handleRedirectCallback();
+
+    if (Clerk.user) {
+        const email = Clerk.user.primaryEmailAddress.emailAddress;
+        
+        // sync with Flask backend
+        try {
+            const response = await fetch('/api/login-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+
+            if (response.ok) {
+                // IMPORTANT: Use replace() so the user can't click "Back" into the loop
+                window.location.replace('/admin/dashboard');
+            } else {
+                console.error("Flask rejected the session setup.");
+                window.location.replace('/login');
+            }
+        } catch (err) {
+            console.error("Network error syncing with backend:", err);
+        }
+    } else {
+        window.location.replace('/login');
+    }
+});
+
+  </script>
+<body>
+</body>
+</html>
